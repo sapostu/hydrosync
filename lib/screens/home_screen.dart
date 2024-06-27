@@ -15,28 +15,30 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   late HomeScreenService service;
   Stream<bool?>? didQuizStream;
-  int? totalWeight;
+  Stream<int?>? waterPerDayStream;  // Restored stream for water per day
 
   @override
   void initState() {
     super.initState();
     service = HomeScreenService(widget.email);
     didQuizStream = service.getDidQuizStatus();
+    waterPerDayStream = service.getWaterPerDay();  // Initialize the stream
   }
 
   void _navigateAndDisplayQuiz(BuildContext context) async {
-    // Start the WaterQuizScreen and await the result from Navigator.pop.
     final result = await Navigator.of(context).push<int>(
       MaterialPageRoute(builder: (context) => WaterQuizScreen(email: widget.email)),
     );
 
-    // After the Navigator.pop on the Quiz screen, set the state with the result.
     if (result != null) {
       setState(() {
-        totalWeight = result;
+        service.finalizeQuizResults(result);  // This updates Firestore and should trigger stream updates
       });
-      service.finalizeQuizResults(result);
     }
+  }
+
+  void _toggleDidQuiz() {
+    service.toggleDidQuiz();
   }
 
   @override
@@ -49,38 +51,47 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Center(
         child: StreamBuilder<bool?>(
           stream: didQuizStream,
-          builder: (context, snapshot) {
-            if (snapshot.hasError) {
-              return Text('Error: ${snapshot.error}');
+          builder: (context, didQuizSnapshot) {
+            if (didQuizSnapshot.hasError) {
+              return Text('Error: ${didQuizSnapshot.error}');
             }
-            switch (snapshot.connectionState) {
-              case ConnectionState.waiting:
-                return Text('Loading...');
-              default:
-                final didQuiz = snapshot.data ?? false;
-                return Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Text('Welcome, ${widget.email}'),
-                    if (totalWeight != -1)
-                      Card(
+            if (didQuizSnapshot.connectionState == ConnectionState.waiting) {
+              return CircularProgressIndicator();
+            }
+            final didQuiz = didQuizSnapshot.data ?? false;
+            return Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Text('Welcome, ${widget.email}'),
+                StreamBuilder<int?>(
+                  stream: waterPerDayStream,
+                  builder: (context, waterSnapshot) {
+                    if (waterSnapshot.hasData && didQuiz) {
+                      return Card(
                         margin: EdgeInsets.all(8),
                         child: Padding(
                           padding: EdgeInsets.all(16),
-                          child: Text('Total Water Per Day: $totalWeight liters'),
+                          child: Text('Total Water Per Day: ${waterSnapshot.data} liters'),
                         ),
-                      ),
-                    if (!didQuiz)
-                      Card(
-                        margin: EdgeInsets.all(8),
-                        child: ListTile(
-                          title: Text('Take Water Quiz'),
-                          onTap: () => _navigateAndDisplayQuiz(context),
-                        ),
-                      ),
-                  ],
-                );
-            }
+                      );
+                    }
+                    return SizedBox.shrink();
+                  }
+                ),
+                ElevatedButton(
+                  onPressed: _toggleDidQuiz,
+                  child: Text('Change Quiz Flag')
+                ),
+                if (!didQuiz)
+                  Card(
+                    margin: EdgeInsets.all(8),
+                    child: ListTile(
+                      title: Text('Take Water Quiz'),
+                      onTap: () => _navigateAndDisplayQuiz(context),
+                    ),
+                  ),
+              ],
+            );
           },
         ),
       ),
