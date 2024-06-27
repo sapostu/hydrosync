@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/home_screen_service.dart';
+import 'water_quiz_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final String email;
@@ -42,21 +43,23 @@ class _HomeScreenState extends State<HomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
                     Text('Welcome, ${widget.email}'),
-                    if (didQuiz)
+                    if (!didQuiz)
                       Card(
                         margin: EdgeInsets.all(8),
-                        child: Padding(
-                          padding: EdgeInsets.all(16),
-                          child: Text('You have completed the quiz!'),
+                        child: ListTile(
+                          title: Text('Take Water Quiz'),
+                          onTap: () {
+                            Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) => WaterQuizScreen(email: widget.email),
+                            ));
+                          },
                         ),
                       ),
                     ElevatedButton(
-                      onPressed: () => service.toggleDidQuiz(didQuiz).catchError((error) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Error updating status'))
-                        );
-                      }),
-                      child: Text('Toggle Quiz Completion Status'),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: Text('Back to Home'),
                     ),
                   ],
                 );
