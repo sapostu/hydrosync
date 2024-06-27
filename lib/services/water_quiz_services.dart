@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
 
 class WaterQuizServices {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -17,13 +16,18 @@ class WaterQuizServices {
     questionWeights[index] = weight;
   }
 
-  // Validate if a selection has been made for the current question index
   bool validateCurrentSelection(int index) {
     return questionWeights[index] != null;
   }
 
   int computeTotalWeight() {
-    // Calculate the total weight by summing up all non-null weights
     return questionWeights.where((weight) => weight != null).fold(0, (previous, current) => previous! + current!);
+  }
+
+  Future<void> finalizeQuizResults(String userEmail, int totalWeight) async {
+    await _firestore.collection('accounts').doc(userEmail).update({
+      'did_quiz': true,
+      'water_per_day': totalWeight
+    });
   }
 }

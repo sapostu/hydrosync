@@ -15,6 +15,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   late HomeScreenService service;
   Stream<bool?>? didQuizStream;
+  int? totalWeight;
 
   @override
   void initState() {
@@ -23,10 +24,28 @@ class _HomeScreenState extends State<HomeScreen> {
     didQuizStream = service.getDidQuizStatus();
   }
 
+  void _navigateAndDisplayQuiz(BuildContext context) async {
+    // Start the WaterQuizScreen and await the result from Navigator.pop.
+    final result = await Navigator.of(context).push<int>(
+      MaterialPageRoute(builder: (context) => WaterQuizScreen(email: widget.email)),
+    );
+
+    // After the Navigator.pop on the Quiz screen, set the state with the result.
+    if (result != null) {
+      setState(() {
+        totalWeight = result;
+      });
+      service.finalizeQuizResults(result);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Home Screen')),
+      appBar: AppBar(
+        title: Text('Home Screen'),
+        automaticallyImplyLeading: false
+      ),
       body: Center(
         child: StreamBuilder<bool?>(
           stream: didQuizStream,
@@ -43,24 +62,22 @@ class _HomeScreenState extends State<HomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
                     Text('Welcome, ${widget.email}'),
+                    if (totalWeight != -1)
+                      Card(
+                        margin: EdgeInsets.all(8),
+                        child: Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Text('Total Water Per Day: $totalWeight liters'),
+                        ),
+                      ),
                     if (!didQuiz)
                       Card(
                         margin: EdgeInsets.all(8),
                         child: ListTile(
                           title: Text('Take Water Quiz'),
-                          onTap: () {
-                            Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) => WaterQuizScreen(email: widget.email),
-                            ));
-                          },
+                          onTap: () => _navigateAndDisplayQuiz(context),
                         ),
                       ),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                      child: Text('Back to Home'),
-                    ),
                   ],
                 );
             }

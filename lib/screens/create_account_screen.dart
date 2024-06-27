@@ -12,10 +12,11 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   final TextEditingController _passwordController = TextEditingController();
 
   void _createAccount() async {
-    FirebaseFirestore.instance.collection('accounts').add({
+    FirebaseFirestore.instance.collection('accounts').doc(_emailController.text).set({
       'email': _emailController.text,
       'password': _passwordController.text, // Remember to use proper security practices for storing passwords.
       'did_quiz': false,
+      'water_per_day': -1
     }).then((value) => Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => HomeScreen(email: _emailController.text, password: _passwordController.text))));

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../widgets/water_quiz_widget.dart';
 import '../services/water_quiz_services.dart';
+import 'home_screen.dart'; // Ensure you have the correct import path for HomeScreen
 
 class WaterQuizScreen extends StatefulWidget {
   final String email;
@@ -79,14 +80,24 @@ class _WaterQuizScreenState extends State<WaterQuizScreen> {
           actions: <Widget>[
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // close the dialog
-                Navigator.of(context).pop(); // go back to home screen
+                Navigator.of(context).pop(); // Close the dialog
+                int totalWeight = quizServices.computeTotalWeight();
+                quizServices.finalizeQuizResults(widget.email, totalWeight).then((_) {
+                  // Navigate directly to HomeScreen
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (context) => HomeScreen(email: widget.email, password: "YourPasswordHere")), // Update the handling of the password
+                    (Route<dynamic> route) => false,
+                  );
+                }).catchError((error) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to submit quiz results: $error")));
+                });
               },
               child: Text("Yes"),
             ),
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // just close the dialog
+                Navigator.of(context).pop(); // Just close the dialog
               },
               child: Text("No"),
             ),
@@ -101,7 +112,7 @@ class _WaterQuizScreenState extends State<WaterQuizScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Water Quiz'),
-        automaticallyImplyLeading: false  // This prevents the AppBar from showing a back button
+        automaticallyImplyLeading: false // Prevents the AppBar from showing a back button
       ),
       body: FutureBuilder<List<QueryDocumentSnapshot>>(
         future: quizServices.questionsFuture,
