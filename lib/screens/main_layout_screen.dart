@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
-import 'logs_screen.dart'; // Make sure to import LogsScreen
-// import 'account_screen.dart'; // Uncomment if AccountScreen is ready
+import 'logs_screen.dart';
+import 'add_entry_screen.dart';
 
 class MainLayout extends StatefulWidget {
   final String email;
@@ -16,7 +16,6 @@ class MainLayout extends StatefulWidget {
 class _MainLayoutState extends State<MainLayout> {
   int _selectedIndex = 0;
 
-  // List of widgets to use as bodies for the navigation bar.
   late List<Widget> _widgetOptions;
 
   @override
@@ -24,18 +23,16 @@ class _MainLayoutState extends State<MainLayout> {
     super.initState();
     _widgetOptions = [
       HomeScreen(email: widget.email, password: widget.password),
-      LogsScreen(email: widget.email), // Pass the email to LogsScreen
-      Container(child: Text("Add new content here")), // Placeholder for add screen
-      // AccountScreen(), // Uncomment if AccountScreen is ready
+      LogsScreen(email: widget.email),
+      AddEntryScreen(email: widget.email),  // Add entry screen
+      Container(child: Text("Account Screen Placeholder")),
     ];
-    print("MainLayout initialized with user: ${widget.email}"); // Debug: Track user for whom the layout is initialized
   }
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
-    print("Navigation tab changed to index: $index"); // Debug: Track tab changes
   }
 
   @override
