@@ -63,7 +63,10 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Add Log Entry')),
+      appBar: AppBar(
+        title: Text('Add Log Entry'),
+        automaticallyImplyLeading: false,
+        ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

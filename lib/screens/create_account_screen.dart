@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'main_layout_screen.dart'; // Make sure to import MainLayout correctly
+import 'main_layout_screen.dart'; // Ensure the correct import path
 
 class CreateAccountScreen extends StatefulWidget {
   @override
@@ -12,15 +12,30 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   final TextEditingController _passwordController = TextEditingController();
 
   void _createAccount() async {
-    FirebaseFirestore.instance.collection('accounts').doc(_emailController.text).set({
-      'email': _emailController.text,
-      'password': _passwordController.text, // Remember to use proper security practices for storing passwords.
-      'did_quiz': false,
-      'water_per_day': -1
-    }).then((value) => Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => MainLayout(email: _emailController.text, password: _passwordController.text))
-    ));
+    DocumentReference accountRef = FirebaseFirestore.instance.collection('accounts').doc(_emailController.text);
+
+    // Check if account already exists
+    DocumentSnapshot accountSnapshot = await accountRef.get();
+    if (accountSnapshot.exists) {
+      // Show a banner if the account already exists
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Account exists already!"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } else {
+      // Create the account if it does not exist
+      accountRef.set({
+        'email': _emailController.text,
+        'password': _passwordController.text, // Consider using a secure way to store passwords.
+        'did_quiz': false,
+        'water_per_day': -1
+      }).then((value) => Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => MainLayout(email: _emailController.text, password: _passwordController.text))
+      ));
+    }
   }
 
   @override

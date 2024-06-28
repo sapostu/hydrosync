@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'logs_screen.dart';
 import 'add_entry_screen.dart';
+import 'edit_account_screen.dart'; // Added import for EditAccountScreen
 
 class MainLayout extends StatefulWidget {
   final String email;
@@ -25,7 +26,7 @@ class _MainLayoutState extends State<MainLayout> {
       HomeScreen(email: widget.email, password: widget.password),
       LogsScreen(email: widget.email),
       AddEntryScreen(email: widget.email),  // Add entry screen
-      Container(child: Text("Account Screen Placeholder")),
+      EditAccountScreen(email: widget.email),  // Edit account screen
     ];
   }
 
@@ -45,7 +46,7 @@ class _MainLayoutState extends State<MainLayout> {
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.list), label: 'Logs'),
-          BottomNavigationBarItem(icon: Icon(Icons.add), label: '+'),
+          BottomNavigationBarItem(icon: Icon(Icons.add), label: 'Add'),
           BottomNavigationBarItem(icon: Icon(Icons.account_circle), label: 'Account'),
         ],
         currentIndex: _selectedIndex,

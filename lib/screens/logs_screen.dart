@@ -20,6 +20,7 @@ class LogsScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Logs'),
+        automaticallyImplyLeading: false
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: _logsStream,
