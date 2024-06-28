@@ -28,7 +28,6 @@ class WaterQuizWidget extends StatelessWidget {
     return Card(
       child: Column(
         children: <Widget>[
-          ListTile(title: Text(question)),
           ...options.map((option) {
             String optionText = questionData[option] ?? 'N/A';
             int optionWeight = questionData['${option}-weight'] as int? ?? 0;

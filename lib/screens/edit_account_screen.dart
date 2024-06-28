@@ -15,18 +15,17 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _waterPerDayController = TextEditingController();
-  late String _originalEmail;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
   void initState() {
     super.initState();
     _emailController.text = widget.email;
-    _originalEmail = widget.email;
     _fetchCurrentDetails();
   }
 
   void _fetchCurrentDetails() async {
-    DocumentReference ref = FirebaseFirestore.instance.collection('accounts').doc(widget.email);
+    DocumentReference ref = _firestore.collection('accounts').doc(widget.email);
     DocumentSnapshot snapshot = await ref.get();
     if (snapshot.exists) {
       Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
@@ -35,53 +34,23 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
     }
   }
 
-  Future<void> _updateEmail(String newEmail) async {
-    if (newEmail.isEmpty || newEmail == _originalEmail) return;
-
-    DocumentReference newEmailRef = FirebaseFirestore.instance.collection('accounts').doc(newEmail);
-    DocumentSnapshot newEmailSnapshot = await newEmailRef.get();
-
-    if (newEmailSnapshot.exists) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Account exists already"), backgroundColor: Colors.red),
-      );
-      return;
-    }
-
-    DocumentReference originalRef = FirebaseFirestore.instance.collection('accounts').doc(_originalEmail);
-    DocumentSnapshot originalSnapshot = await originalRef.get();
-    if (originalSnapshot.exists) {
-      Map<String, dynamic> data = originalSnapshot.data() as Map<String, dynamic>;
-      data['email'] = newEmail; // Update the email field within the document
-      await newEmailRef.set(data);
-      await originalRef.delete();
-
-      setState(() {
-        _originalEmail = newEmail;
-      });
-
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text("Update Successful"),
-          content: Text("Email updated successfully!"),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text('OK'),
-            ),
-          ],
-        ),
-      );
-    }
-  }
-
-  void _updateField(String field, dynamic value, String message) async {
+  Future<void> _updateField(String field, dynamic value, String message) async {
     if (value == null || value.toString().isEmpty) return;
 
-    FirebaseFirestore.instance.collection('accounts').doc(_originalEmail).update({
-      field: value
-    }).then((_) {
+    try {
+      await _firestore.collection('accounts').doc(widget.email).update({
+        field: value
+      });
+
+      if (field == 'water_per_day') {
+        // Update current_day collection as well
+        QuerySnapshot snapshot = await _firestore.collection('current_day').where('email', isEqualTo: widget.email).get();
+        if (snapshot.docs.isNotEmpty) {
+          DocumentReference currentDayRef = snapshot.docs.first.reference;
+          await currentDayRef.update({'water_per_day': value});
+        }
+      }
+
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -95,11 +64,29 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
           ],
         ),
       );
-    }).catchError((error) {
+    } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to update $message.'))
+        SnackBar(content: Text('Failed to update $message. Error: $error'))
       );
-    });
+    }
+  }
+
+  Future<void> _startWaterQuiz() async {
+    final result = await Navigator.push<int>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => WaterQuizScreen(email: widget.email),
+      ),
+    );
+
+    if (result != null) {
+      // Update current_day collection with the new water_per_day value
+      QuerySnapshot snapshot = await _firestore.collection('current_day').where('email', isEqualTo: widget.email).get();
+      if (snapshot.docs.isNotEmpty) {
+        DocumentReference currentDayRef = snapshot.docs.first.reference;
+        await currentDayRef.update({'water_per_day': result});
+      }
+    }
   }
 
   @override
@@ -128,7 +115,7 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
                   ),
                 ),
                 ElevatedButton(
-                  onPressed: () => _updateEmail(_emailController.text),
+                  onPressed: () => _updateField('email', _emailController.text, 'Email'),
                   child: Text('Update'),
                 ),
               ],
@@ -140,7 +127,7 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
                   child: TextField(
                     controller: _passwordController,
                     decoration: InputDecoration(labelText: 'Password'),
-                    obscureText: true,
+                    obscureText: false,
                   ),
                 ),
                 ElevatedButton(
@@ -172,15 +159,6 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  void _startWaterQuiz() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => WaterQuizScreen(email: _originalEmail),
       ),
     );
   }

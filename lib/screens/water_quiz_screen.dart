@@ -21,6 +21,7 @@ class _WaterQuizScreenState extends State<WaterQuizScreen> {
   void initState() {
     super.initState();
     quizServices = WaterQuizServices();
+    print('WaterQuizScreen initialized for user: ${widget.email}');
   }
 
   void _nextQuestion() {
@@ -28,6 +29,7 @@ class _WaterQuizScreenState extends State<WaterQuizScreen> {
       if (_currentQuestionIndex < quizServices.questionWeights.length - 1) {
         setState(() {
           _currentQuestionIndex++;
+          print('Moved to next question: $_currentQuestionIndex');
         });
       }
     } else {
@@ -41,6 +43,7 @@ class _WaterQuizScreenState extends State<WaterQuizScreen> {
     if (_currentQuestionIndex > 0) {
       setState(() {
         _currentQuestionIndex--;
+        print('Moved to previous question: $_currentQuestionIndex');
       });
     } else {
       showDialog(
@@ -52,6 +55,7 @@ class _WaterQuizScreenState extends State<WaterQuizScreen> {
             actions: <Widget>[
               TextButton(
                 onPressed: () {
+                  print('User confirmed to quit quiz');
                   Navigator.of(context).pop(); // close the dialog
                   Navigator.of(context).pop(); // go back to main layout
                 },
@@ -59,6 +63,7 @@ class _WaterQuizScreenState extends State<WaterQuizScreen> {
               ),
               TextButton(
                 onPressed: () {
+                  print('User canceled quitting quiz');
                   Navigator.of(context).pop(); // just close the dialog
                 },
                 child: Text("No"),
@@ -70,7 +75,37 @@ class _WaterQuizScreenState extends State<WaterQuizScreen> {
     }
   }
 
-  void _handleSubmit() {
+  Future<void> _handleSubmit() async {
+    Navigator.of(context).pop(); // Close the dialog first
+
+    int totalWeight = quizServices.computeTotalWeight();
+    print('Total weight computed: $totalWeight');
+
+    try {
+      await quizServices.finalizeQuizResults(widget.email, totalWeight);
+      print('Quiz results finalized for ${widget.email}');
+
+      await quizServices.createCurrentDayEntry(widget.email, totalWeight);
+      print('Current day entry created for ${widget.email}');
+
+      if (mounted) { // Check if the widget is still mounted before navigating
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MainLayout(email: widget.email, password: "YourPasswordHere"),
+          ),
+          (Route<dynamic> route) => false,
+        );
+      }
+    } catch (error) {
+      if (mounted) { // Check if the widget is still mounted before showing a SnackBar
+        print('Error during quiz submission: $error');
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to complete the quiz: $error")));
+      }
+    }
+  }
+
+  void _showSubmitDialog() {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -79,24 +114,12 @@ class _WaterQuizScreenState extends State<WaterQuizScreen> {
           content: Text("Are you sure you want to submit your answers and finish the quiz?"),
           actions: <Widget>[
             TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-                int totalWeight = quizServices.computeTotalWeight();
-                quizServices.finalizeQuizResults(widget.email, totalWeight).then((_) {
-                  // Navigate directly to MainLayout instead of HomeScreen
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (context) => MainLayout(email: widget.email, password: "YourPasswordHere")), // Update the handling of the password
-                    (Route<dynamic> route) => false,
-                  );
-                }).catchError((error) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to submit quiz results: $error")));
-                });
-              },
+              onPressed: () => _handleSubmit(),
               child: Text("Yes"),
             ),
             TextButton(
               onPressed: () {
+                print('User canceled quiz submission');
                 Navigator.of(context).pop(); // Just close the dialog
               },
               child: Text("No"),
@@ -130,6 +153,13 @@ class _WaterQuizScreenState extends State<WaterQuizScreen> {
             bool isLastQuestion = _currentQuestionIndex == documents.length - 1;
             return Column(
               children: [
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    questionData['question'],
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ),
                 Expanded(
                   child: WaterQuizWidget(
                     questionData: questionData,
@@ -138,8 +168,9 @@ class _WaterQuizScreenState extends State<WaterQuizScreen> {
                     onOptionSelected: (weight) {
                       quizServices.updateWeight(_currentQuestionIndex, weight);
                       setState(() {});
+                      print('Option selected for question $_currentQuestionIndex: $weight');
                     },
-                    onSubmit: _handleSubmit,
+                    onSubmit: _showSubmitDialog,
                     isLastQuestion: isLastQuestion,
                     selectedWeight: quizServices.questionWeights[_currentQuestionIndex],
                   ),
@@ -162,7 +193,7 @@ class _WaterQuizScreenState extends State<WaterQuizScreen> {
                       ),
                     if (isLastQuestion)
                       ElevatedButton(
-                        onPressed: _handleSubmit,
+                        onPressed: _showSubmitDialog,
                         child: Text('Submit Quiz'),
                         style: ButtonStyle(backgroundColor: MaterialStateProperty.all(Colors.green)),
                       ),
