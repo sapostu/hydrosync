@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../widgets/water_quiz_widget.dart';
 import '../services/water_quiz_services.dart';
-import 'home_screen.dart'; // Ensure you have the correct import path for HomeScreen
+import 'main_layout_screen.dart'; // Ensure you have the correct import path for MainLayout
 
 class WaterQuizScreen extends StatefulWidget {
   final String email;
@@ -53,7 +53,7 @@ class _WaterQuizScreenState extends State<WaterQuizScreen> {
               TextButton(
                 onPressed: () {
                   Navigator.of(context).pop(); // close the dialog
-                  Navigator.of(context).pop(); // go back to home screen
+                  Navigator.of(context).pop(); // go back to main layout
                 },
                 child: Text("Yes"),
               ),
@@ -83,10 +83,10 @@ class _WaterQuizScreenState extends State<WaterQuizScreen> {
                 Navigator.of(context).pop(); // Close the dialog
                 int totalWeight = quizServices.computeTotalWeight();
                 quizServices.finalizeQuizResults(widget.email, totalWeight).then((_) {
-                  // Navigate directly to HomeScreen
+                  // Navigate directly to MainLayout instead of HomeScreen
                   Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (context) => HomeScreen(email: widget.email, password: "YourPasswordHere")), // Update the handling of the password
+                    MaterialPageRoute(builder: (context) => MainLayout(email: widget.email, password: "YourPasswordHere")), // Update the handling of the password
                     (Route<dynamic> route) => false,
                   );
                 }).catchError((error) {

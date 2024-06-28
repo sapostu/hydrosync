@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'home_screen.dart';
+import 'main_layout_screen.dart'; // Make sure to import MainLayout correctly
 
 class CreateAccountScreen extends StatefulWidget {
   @override
@@ -19,7 +19,8 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
       'water_per_day': -1
     }).then((value) => Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => HomeScreen(email: _emailController.text, password: _passwordController.text))));
+        MaterialPageRoute(builder: (context) => MainLayout(email: _emailController.text, password: _passwordController.text))
+    ));
   }
 
   @override
@@ -29,6 +30,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             TextField(
               controller: _emailController,
@@ -39,6 +41,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
               decoration: InputDecoration(labelText: 'Password'),
               obscureText: true,
             ),
+            SizedBox(height: 20), // Provides spacing before the button
             ElevatedButton(
               onPressed: _createAccount,
               child: Text('Submit'),

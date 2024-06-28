@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'home_screen.dart';
+import 'main_layout_screen.dart';  // Make sure you have a file named 'main_layout.dart'
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -17,7 +17,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (querySnapshot.docs.isNotEmpty) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => HomeScreen(email: _emailController.text, password: _passwordController.text)),
+        MaterialPageRoute(builder: (context) => MainLayout(email: _emailController.text, password: _passwordController.text)),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Invalid credentials')));
@@ -31,6 +31,7 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             TextField(
               controller: _emailController,
@@ -41,6 +42,7 @@ class _LoginScreenState extends State<LoginScreen> {
               decoration: InputDecoration(labelText: 'Password'),
               obscureText: true,
             ),
+            SizedBox(height: 20),  // Added some spacing before the button
             ElevatedButton(
               onPressed: _signIn,
               child: Text('Sign In'),
