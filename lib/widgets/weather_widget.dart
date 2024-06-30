@@ -81,6 +81,7 @@ class _WeatherWidgetState extends State<WeatherWidget> {
       }
 
       print('Temperature adjustment: $tempAdjustment, Humidity adjustment: $humidityAdjustment');
+      updateWaterPerDay();
     }
   }
 
@@ -133,24 +134,15 @@ class _WeatherWidgetState extends State<WeatherWidget> {
                   'Humidity: $humidity%',
                   style: TextStyle(fontSize: 16),
                 ),
-                Text(
-                  'Temperature Adjustment: $tempAdjustment',
-                  style: TextStyle(fontSize: 16),
-                ),
-                Text(
-                  'Humidity Adjustment: $humidityAdjustment',
-                  style: TextStyle(fontSize: 16),
-                ),
+                // Text(
+                //   'Temperature Adjustment: $tempAdjustment',
+                //   style: TextStyle(fontSize: 16),
+                // ),
+                // Text(
+                //   'Humidity Adjustment: $humidityAdjustment',
+                //   style: TextStyle(fontSize: 16),
+                // ),
               ],
-              SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: () {
-                  print('Adjust water per day button pressed');
-                  updateWaterPerDay();
-                },
-                icon: Icon(Icons.update),
-                label: Text('Adjust Water Per Day'),
-              ),
             ],
           ],
         ),

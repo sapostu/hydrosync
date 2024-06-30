@@ -4,6 +4,7 @@ import 'water_quiz_screen.dart';
 import 'login_screen.dart'; // Assuming the login screen is named 'login_screen.dart'
 import '../widgets/current_day_widget.dart'; // Import the new CurrentDayWidget
 import '../widgets/weather_widget.dart'; // Import the new WeatherWidget
+import '../widgets/steps_widget.dart'; // Import the new StepsWidget
 
 class HomeScreen extends StatefulWidget {
   final String email;
@@ -24,6 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   int tempAdjustment = 0;
   int humidityAdjustment = 0;
+  int stepsAdjustment = 0;
 
   @override
   void initState() {
@@ -58,6 +60,13 @@ class _HomeScreenState extends State<HomeScreen> {
     print('Adjustments updated: tempAdjustment=$tempAdjustment, humidityAdjustment=$humidityAdjustment');
   }
 
+  void _updateStepsAdjustment(int stepsAdj) {
+    setState(() {
+      stepsAdjustment = stepsAdj;
+    });
+    print('Steps adjustment updated: $stepsAdjustment');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -88,10 +97,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     email: widget.email,
                     tempAdjustment: tempAdjustment,
                     humidityAdjustment: humidityAdjustment,
+                    stepsAdjustment: stepsAdjustment,
                   ),
                   WeatherWidget(
                     email: widget.email,
                     updateAdjustments: _updateAdjustments,
+                  ),
+                  StepsWidget(
+                    email: widget.email,
+                    updateStepsAdjustment: _updateStepsAdjustment,
                   ),
                 ],
                 ElevatedButton(
