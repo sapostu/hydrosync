@@ -1,7 +1,4 @@
 # hydrosync
-
-A new Flutter project.
-
 ## Getting Started
 
 1) Download Flutter Dependencies and set it up https://docs.flutter.dev/get-started/install 
