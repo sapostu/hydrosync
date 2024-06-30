@@ -3,6 +3,7 @@ import '../services/home_screen_service.dart';
 import 'water_quiz_screen.dart';
 import 'login_screen.dart'; // Assuming the login screen is named 'login_screen.dart'
 import '../widgets/current_day_widget.dart'; // Import the new CurrentDayWidget
+import '../widgets/weather_widget.dart'; // Import the new WeatherWidget
 
 class HomeScreen extends StatefulWidget {
   final String email;
@@ -21,12 +22,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
   int _selectedIndex = 0; // For bottom navigation bar
 
+  int tempAdjustment = 0;
+  int humidityAdjustment = 0;
+
   @override
   void initState() {
     super.initState();
     service = HomeScreenService(widget.email);
     didQuizStream = service.getDidQuizStatus();
     waterPerDayStream = service.getWaterPerDay();
+    print('HomeScreen initialized for user: ${widget.email}');
   }
 
   void _navigateAndDisplayQuiz(BuildContext context) async {
@@ -36,11 +41,21 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (result != null) {
       service.finalizeQuizResults(result);
+      print('Quiz result received: $result');
     }
   }
 
   void _toggleDidQuiz() {
     service.toggleDidQuiz();
+    print('Toggled didQuiz flag');
+  }
+
+  void _updateAdjustments(int tempAdj, int humidityAdj) {
+    setState(() {
+      tempAdjustment = tempAdj;
+      humidityAdjustment = humidityAdj;
+    });
+    print('Adjustments updated: tempAdjustment=$tempAdjustment, humidityAdjustment=$humidityAdjustment');
   }
 
   @override
@@ -55,28 +70,30 @@ class _HomeScreenState extends State<HomeScreen> {
           stream: didQuizStream,
           builder: (context, didQuizSnapshot) {
             if (didQuizSnapshot.hasError) {
+              print('Error in didQuiz stream: ${didQuizSnapshot.error}');
               return Text('Error: ${didQuizSnapshot.error}');
             }
             if (didQuizSnapshot.connectionState == ConnectionState.waiting) {
+              print('Waiting for didQuiz data...');
               return CircularProgressIndicator();
             }
             final didQuiz = didQuizSnapshot.data ?? false;
+            print('DidQuiz data received: $didQuiz');
             return Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 Text('Welcome, ${widget.email}'),
-                if (didQuiz && waterPerDayStream != null) // Display water per day if data is available and quiz was done
-                  // StreamBuilder<int?>(
-                  //   stream: waterPerDayStream,
-                  //   builder: (context, waterSnapshot) {
-                  //     if (waterSnapshot.hasData) {
-                  //       return 
-                  //     }
-                  //     return SizedBox.shrink();
-                  //   }
-                  // ),
-                if (didQuiz) // Display current day information if quiz was done
-                  CurrentDayWidget(email: widget.email),
+                if (didQuiz) ...[
+                  CurrentDayWidget(
+                    email: widget.email,
+                    tempAdjustment: tempAdjustment,
+                    humidityAdjustment: humidityAdjustment,
+                  ),
+                  WeatherWidget(
+                    email: widget.email,
+                    updateAdjustments: _updateAdjustments,
+                  ),
+                ],
                 ElevatedButton(
                   onPressed: _toggleDidQuiz,
                   child: Text('Change Quiz Flag')
